@@ -1,4 +1,5 @@
 rm(list=ls())
+setwd('~/Documenti/compoteam/paper_stattest/compca')
 
 #install.packages("rockchalk")
 library(rockchalk)
@@ -8,7 +9,7 @@ library(utils)
 # Step 1. Definition of the parameters
 machine_toll = 5*.Machine$double.eps
 
-num_sim = 1000
+num_sim = 2000
 D = 4
 n_y = 500
 n_z = n_y
@@ -25,7 +26,7 @@ for (isim in 1:num_sim){
   
   if (isim %% 10 == 1){print(paste0('Simulation num = ', isim))}
 
-  # Step 2. Ranom samples from multivariate Gaussian in R^(D-1)
+  # Step 2. Random samples from multivariate Gaussian in R^(D-1)
   Y_or = mvrnorm(n=n_y, mu=mu_y, Sigma=omega_y)
   Z_or = mvrnorm(n=n_z, mu=mu_z, Sigma=omega_z)
   
@@ -61,8 +62,8 @@ for (isim in 1:num_sim){
   # !!!! Note: Probably Step 3 and 4 are not really necessary !!!!!
   
   # Step 5. Estimate sample covariance matrix
-  est_cov_y = cov(Y_transf)
-  est_cov_z = cov(Z_transf)
+  est_cov_y = crossprod(sweep(Y_transf, 2, colMeans(Y_transf)))
+  est_cov_z = crossprod(sweep(Z_transf, 2, colMeans(Z_transf)))
   
   # Step 6. Estimate sample value of the test statistic.
   eigen_cov_y = eigen(est_cov_y)
@@ -73,7 +74,12 @@ for (isim in 1:num_sim){
                    eigen_sum$values[1:K])
 }
 
-hist(stat_values, 100)
+hist(stat_values, 200)
+
+result = list('param' = list('n_y' = n_y, 'n_z' = n_z, 'K'=K,
+                          'omega_y' = omega_y, 'omega_z' = omega_z),
+                    'stat_values'=stat_values)
+save(result, file="prova2.Rdata")
 
 #mu_stat_values = mean(stat_values)
 #var_stat_values = var(stat_values)
