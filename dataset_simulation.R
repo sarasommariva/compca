@@ -1,5 +1,6 @@
 rm(list=ls())
 setwd('~/Documenti/compoteam/paper_stattest/compca')
+source("utils.R")
 
 #install.packages("rockchalk")
 library(rockchalk)
@@ -9,16 +10,35 @@ library(utils)
 # Step 1. Definition of the parameters
 machine_toll = 5*.Machine$double.eps
 
-num_sim = 2000
-D = 4
+num_sim = 1
+D = 6
 n_y = 500
 n_z = n_y
 K = 2
+Q = 2
 
 mu_y = rep(0, D-1)
 mu_z= rep(0, D-1)
-omega_y = diag(c(10, 5, 3))
-omega_z = diag(c(8, 7, 1))
+
+# Case 1. Diagonal matrices with structural zeros
+#omega_y = diag(c(10, 5, 3, 0, 0))
+#omega_z = diag(c(8, 7, 3, 2, 1))
+
+# Case 2. Non-diagonal matrices with structural zeros
+#eigenval_y = c(10, 5, 3)
+#eigenval_z = c(8, 7, 3, 2, 1)
+#temp_covs = rand_covmat(D, K, Q, eigenval_y=c(10, 5, 3), 
+#                        eigenval_z=c(8, 7, 3, 2, 1))
+
+# Case 3. Matrices that do not satisfy H_0
+temp_covs = rand_indep_covmat(D, K, Q, eigenval_y=c(10, 5, 3), 
+                        eigenval_z=c(8, 7, 3, 2, 1))
+
+
+omega_y = temp_covs$omega_y
+omega_z = temp_covs$omega_z
+omega_y = adiag(omega_y, matrix(0, Q, Q))
+rm(temp_covs)
 
 stat_values = matrix(data=NA, nrow=num_sim, ncol=1)
 
@@ -79,7 +99,7 @@ hist(stat_values, 200)
 result = list('param' = list('n_y' = n_y, 'n_z' = n_z, 'K'=K,
                           'omega_y' = omega_y, 'omega_z' = omega_z),
                     'stat_values'=stat_values)
-save(result, file="prova2.Rdata")
+save(result, file="prova_zeros_indep.Rdata")
 
 #mu_stat_values = mean(stat_values)
 #var_stat_values = var(stat_values)

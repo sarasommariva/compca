@@ -8,16 +8,16 @@
 rm(list=ls())
 setwd('~/Documenti/compoteam/paper_stattest/compca')
 
-load('prova.Rdata')
+load('prova_zeros_indep.Rdata')
 
 # Step 1. Definition of the parameters
 D = dim(result$param$omega_z)[1] + 1
+K = result$param$K
+#K=2
 n_y = result$param$n_y
 n_z = result$param$n_z
 omega_y = result$param$omega_y
 omega_z = result$param$omega_z
-
-K = 2 # <--- READ FROM PARAM!!!!!
 
 # Step 2. Diagonalization of the covariance matrices
 pooled_omega = ((n_y-1)*omega_y + (n_z-1)*omega_z) / (n_y+n_z-2)
@@ -59,7 +59,7 @@ for (ii in 1:K){
           (n_y-1)*(mat_U[ii,hh]*mat_U[jj,ll]*alpha[hh]*alpha[ll])^2/(alpha[hh]-alpha[ll]) +
           (n_z-1)*(mat_V[ii,hh]*mat_V[jj,ll]*beta[hh]*beta[ll])^2/(beta[hh]-beta[ll])
         sum2 = sum2 + 
-          ((n_y-1)*mat_UlamU[ii,hh]*mat_UlamU[jj,ll]+(n_z-1)*mat_VlamV[ii,hh]*mat_VlamV[jj,ll])/(psi[hh]-psi[ll])
+          ((n_y-1)*mat_UlamU[ii,hh]*mat_UlamU[jj,ll]+(n_z-1)*mat_VlamV[ii,hh]*mat_VlamV[jj,ll])^2/(psi[hh]-psi[ll])
       }
     }
     sigma2_T = sigma2_T + 
@@ -71,8 +71,11 @@ for (ii in 1:K){
 }
 
 # Step 5. Define parameters of the Chi
+mu_T_camp = mean(result$stat_values)
+sigma2_T_camp = var(result$stat_values)
+
 const_chi = 0.5*sigma2_T / mu_T
-df_chi = floor(2*mu_T^2/sigma2_T)
+df_chi = 2*mu_T^2/sigma2_T
 
 delta_bin = 0.1
 points = seq(min(result$stat_values)-delta_bin, max(result$stat_values)+delta_bin, by=delta_bin)
