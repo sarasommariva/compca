@@ -8,29 +8,30 @@
 rm(list=ls())
 setwd('~/Documenti/compoteam/paper_stattest/compca')
 
-load('prova_zeros_indep.Rdata')
+load('prova_zeros.Rdata')
 
 # Step 1. Definition of the parameters
 D = dim(result$param$omega_z)[1] + 1
 K = result$param$K
-#K=2
+Q = 2
 n_y = result$param$n_y
 n_z = result$param$n_z
 omega_y = result$param$omega_y
 omega_z = result$param$omega_z
 
 # Step 2. Diagonalization of the covariance matrices
-pooled_omega = ((n_y-1)*omega_y + (n_z-1)*omega_z) / (n_y+n_z-2)
-
 eigen_omega_y = eigen(omega_y)
 eigen_omega_z = eigen(omega_z)
+
+#   - Pooled covariance matrix
+pooled_omega = ((n_y-1)*adiag(omega_y, matrix(0, Q, Q)) + (n_z-1)*omega_z) / (n_y+n_z-2)
 eigen_pooled = eigen(pooled_omega)
 
-alpha = eigen_omega_y$values
+alpha = c(eigen_omega_y$values, matrix(0, Q, 1))
 beta = eigen_omega_z$values
 psi = eigen_pooled$values
 mat_K = eigen_pooled$vectors
-mat_U = t(mat_K) %*% eigen_omega_y$vectors
+mat_U = t(mat_K) %*% adiag(eigen_omega_y$vectors, diag(Q))
 mat_V = t(mat_K) %*% eigen_omega_z$vectors
 mat_UlamU = mat_U %*% diag(alpha) %*% t(mat_U)
 mat_VlamV = mat_V %*% diag(beta) %*% t(mat_V)
