@@ -60,4 +60,47 @@ rand_indep_covmat <- function(D, K, Q, eigenval_y, eigenval_z) {
   # Output
   return(list("omega_y"=omega_y, "omega_z"=omega_z))
 }
+
+compute_param_nulldistr <- function(alpha, beta, psi, mat_U, mat_V, n_y, n_z){
+  
+  mat_UlamU = mat_U %*% diag(alpha) %*% t(mat_U)
+  mat_VlamV = mat_V %*% diag(beta) %*% t(mat_V)
+  
+  # Step 1. Compute mean of the test statistic
+  mu_T = 0
+  for (ii in 1:K){
+    for (jj in (K+1):(D-1)){
+      mu_T = mu_T + 
+        (alpha[ii] * alpha[jj])/(alpha[ii] - alpha[jj]) +
+        (beta[ii] * beta[jj])/(beta[ii] - beta[jj]) -
+        ((n_y+n_z-2)*(psi[ii]-psi[jj]))^-1 * 
+        ( (n_y-1)*mat_UlamU[ii,ii]*mat_UlamU[jj,jj] +  (n_z-1)*mat_VlamV[ii,ii]*mat_VlamV[jj,jj])
+    }
+  }
+  
+  # Step 2. Compute variance of the test statistic
+  sigma2_T = 0
+  for (ii in 1:K){
+    for (jj in (K+1):(D-1)){
+      sum1 = 0
+      sum2 = 0
+      for (hh in 1:K){
+        for (ll in (K+1):(D-1)){
+          sum1 = sum1 + 
+            (n_y-1)*(mat_U[ii,hh]*mat_U[jj,ll]*alpha[hh]*alpha[ll])^2/(alpha[hh]-alpha[ll]) +
+            (n_z-1)*(mat_V[ii,hh]*mat_V[jj,ll]*beta[hh]*beta[ll])^2/(beta[hh]-beta[ll])
+          sum2 = sum2 + 
+            ((n_y-1)*mat_UlamU[ii,hh]*mat_UlamU[jj,ll]+(n_z-1)*mat_VlamV[ii,hh]*mat_VlamV[jj,ll])^2/(psi[hh]-psi[ll])
+        }
+      }
+      sigma2_T = sigma2_T + 
+        2 * ( (alpha[ii] * alpha[jj])/(alpha[ii] - alpha[jj]) )^2 +
+        2 * ( (beta[ii] * beta[jj])/(beta[ii] - beta[jj]) )^2 -
+        4 * ((n_y+n_z-2)*(psi[ii]-psi[jj]))^-1 * sum1 + 
+        2 * ((n_y+n_z-2)^2*(psi[ii]-psi[jj]))^-1 * sum2
+    }
+  }
+
+  return(list("mu_T"=mu_T, "sigma2_T"=sigma2_T))  
+}
   
