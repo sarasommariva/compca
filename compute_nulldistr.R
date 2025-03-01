@@ -8,11 +8,14 @@
 rm(list=ls())
 setwd('~/Documenti/compoteam/paper_stattest/compca')
 
-load('prova_zeros.Rdata')
+source("utils.R")
+
+load('prova_h0.Rdata')
 
 # Step 1. Definition of the parameters
 D = dim(result$param$omega_z)[1] + 1
 K = result$param$K
+#Q = result$param$Q
 Q = 2
 n_y = result$param$n_y
 n_z = result$param$n_z
@@ -33,58 +36,30 @@ psi = eigen_pooled$values
 mat_K = eigen_pooled$vectors
 mat_U = t(mat_K) %*% adiag(eigen_omega_y$vectors, diag(Q))
 mat_V = t(mat_K) %*% eigen_omega_z$vectors
-mat_UlamU = mat_U %*% diag(alpha) %*% t(mat_U)
-mat_VlamV = mat_V %*% diag(beta) %*% t(mat_V)
 
-# Step 3. Compute mean of the test statistic
-mu_T = 0
-for (ii in 1:K){
-  for (jj in (K+1):(D-1)){
-      mu_T = mu_T + 
-        (alpha[ii] * alpha[jj])/(alpha[ii] - alpha[jj]) +
-        (beta[ii] * beta[jj])/(beta[ii] - beta[jj]) -
-        ((n_y+n_z-2)*(psi[ii]-psi[jj]))^-1 * 
-          ( (n_y-1)*mat_UlamU[ii,ii]*mat_UlamU[jj,jj] +  (n_z-1)*mat_VlamV[ii,ii]*mat_VlamV[jj,jj])
-  }
-}
+# Step 3. Compute mean and variance of the test statistics
+paramsT = compute_param_nulldistr(alpha, beta, psi, mat_U, mat_V, n_y, n_z)
+mu_T = paramsT$mu_T
+sigma2_T = paramsT$sigma2_T
+rm(paramsT)
 
-# Step 4. Compute variance of the test statistic
-sigma2_T = 0
-for (ii in 1:K){
-  for (jj in (K+1):(D-1)){
-    sum1 = 0
-    sum2 = 0
-    for (hh in 1:K){
-      for (ll in (K+1):(D-1)){
-        sum1 = sum1 + 
-          (n_y-1)*(mat_U[ii,hh]*mat_U[jj,ll]*alpha[hh]*alpha[ll])^2/(alpha[hh]-alpha[ll]) +
-          (n_z-1)*(mat_V[ii,hh]*mat_V[jj,ll]*beta[hh]*beta[ll])^2/(beta[hh]-beta[ll])
-        sum2 = sum2 + 
-          ((n_y-1)*mat_UlamU[ii,hh]*mat_UlamU[jj,ll]+(n_z-1)*mat_VlamV[ii,hh]*mat_VlamV[jj,ll])^2/(psi[hh]-psi[ll])
-      }
-    }
-    sigma2_T = sigma2_T + 
-      2 * ( (alpha[ii] * alpha[jj])/(alpha[ii] - alpha[jj]) )^2 +
-      2 * ( (beta[ii] * beta[jj])/(beta[ii] - beta[jj]) )^2 -
-      4 * ((n_y+n_z-2)*(psi[ii]-psi[jj]))^-1 * sum1 + 
-      2 * ((n_y+n_z-2)^2*(psi[ii]-psi[jj]))^-1 * sum2
-  }
-}
-
-# Step 5. Define parameters of the Chi
+# Compute also sample mean and variance for comparison
 mu_T_camp = mean(result$stat_values)
 sigma2_T_camp = var(result$stat_values)
 
+# Step 5. Define parameters of the Chi
 const_chi = 0.5*sigma2_T / mu_T
 df_chi = 2*mu_T^2/sigma2_T
 
+#   Plots
+# P1. Histogram of the sample values against the theoretical distribution
 delta_bin = 0.1
 points = seq(min(result$stat_values)-delta_bin, max(result$stat_values)+delta_bin, by=delta_bin)
-
 dist_chi = const_chi^-1 * dchisq(points/const_chi, df_chi)
-
 h = hist(result$stat_values, breaks=300, freq=FALSE)
 lines(points, dist_chi)
+
+# P2. 
 
 
 
