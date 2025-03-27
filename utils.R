@@ -171,7 +171,8 @@ compute_pvalue_schott_theo <- function(K, stat_value, omega_y, omega_z,
   
   # Step 5. Compute p-value
   const_chi = 0.5*paramsT$sigma2_T / paramsT$mu_T
-  df_chi = 2*paramsT$mu_T^2/paramsT$sigma2_T
+  df_chi = max(round(2*paramsT$mu_T^2/paramsT$sigma2_T), 1)
+
   pvalues = pchisq(stat_value/const_chi, df_chi, lower.tail = FALSE)
   
   # Output
