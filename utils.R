@@ -71,7 +71,13 @@ rand_sample <- function(n_y, n_z, omega_y, omega_z, distribution){
     mu_z = rep(0, size(omega_z)[1])
     Y_or = mvrnorm(n=n_y, mu=mu_y, Sigma=omega_y)
     Z_or = mvrnorm(n=n_z, mu=mu_z, Sigma=omega_z)
-  } else(print(paste('Cannot sample from', distribution)))
+  } else if (distribution=='Uniform'){
+    # Case 2. Uniform distribution with ????
+    L_y = chol(omega_y) # I use the upper triangular matrix 
+    L_z = chol(omega_z)
+    Y_or = t(replicate(n_y, runif(size(omega_y)[1], -sqrt(3), sqrt(3)))) %*% L_y
+    Z_or = t(replicate(n_z, runif(size(omega_z)[1], -sqrt(3), sqrt(3)))) %*% L_z
+  }else(print(paste('Cannot sample from', distribution)))
   
   # Output
   return(list("Y_or"=Y_or, "Z_or"=Z_or))
