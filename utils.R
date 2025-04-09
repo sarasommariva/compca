@@ -9,6 +9,19 @@
 library(pracma)
 library(magic)
 
+def_base_ilr <- function(D){
+
+  V_ilr<-matrix(ncol=D-1,nrow=D,0)
+
+  for(j in 1:(D-1)){
+    V_ilr[j,j]<-(D-j)/(sqrt((D-j+1)*(D-j)))
+    for(i in (j+1):D)
+      V_ilr[i,j]<--1/(sqrt((D-j+1)*(D-j)))
+  }
+
+  return(V_ilr)
+}
+
 rand_covmat <- function(D, K, Q, eigenval_y, eigenval_z) {
   
   # Input:

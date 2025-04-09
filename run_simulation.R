@@ -8,19 +8,25 @@ library(utils)
 
 
 # Step 1. Parameters definition
+
+#   1.1 Parameters to be explored
+K_sim = 1 # Value of K used to simulate the data (H0: K=2)
+distribution = 'Uniform'
+
+#   1.2. Pre-determined parameters
 D = 8
 Q = 2
 K_H0 = 2  # Value of K used with the null hypothesis
-ny_all= c(20, 40, 60, 80, 100, 120)
-nz_all = c(20, 40, 60, 80, 100, 120)
+ny_all= c(20, 60, 100)
+nz_all = c(20, 60, 100)
 num_sim = 1000
-num_boot = 1000
+num_boot = 100
+
+# - Simplex basis for the ilr
+V_ilr_y = def_base_ilr(D-Q)
+V_ilr_z = def_base_ilr(D)
 
 machine_toll = 5*.Machine$double.eps
-
-#   - Parameters to be explored
-K_sim = 2 # Value of K used to simulate the data
-distribution = 'Gaussian'
 
 # Step 3. Initialization
 folder_res = file.path('.', 'results')
@@ -70,10 +76,10 @@ for (isim in 1:num_sim){
       Y_comp = matrix(data=NA, nrow=n_y, ncol=D-Q)
       Z_comp = matrix(data=NA, nrow=n_z, ncol=D)
       for (id in 1:n_y){
-        Y_comp[id,] <- ilrInv(Y_or[id,])
+        Y_comp[id,] <- ilrInv(Y_or[id,], V_ilr_y)
       }
       for (id in 1:n_z){
-        Z_comp[id,] <- ilrInv(Z_or[id,])
+        Z_comp[id,] <- ilrInv(Z_or[id,], V_ilr_z)
       }
       
       if (!all(abs(rowSums(Y_comp)-1)<machine_toll) || 
@@ -85,10 +91,10 @@ for (isim in 1:num_sim){
       Y_transf = matrix(data=NA, nrow=n_y, ncol=D-Q-1)
       Z_transf = matrix(data=NA, nrow=n_z, ncol=D-1)
       for (id in 1:n_y){
-        Y_transf[id,] <- ilr(Y_comp[id,])
+        Y_transf[id,] <- ilr(Y_comp[id,], V=V_ilr_y)
       }
       for (id in 1:n_z){
-        Z_transf[id,] <- ilr(Z_comp[id,])
+        Z_transf[id,] <- ilr(Z_comp[id,], V=V_ilr_z)
       }
       
       results_list[[length(nz_all)*(iy-1)+iz]]$err_ilr_Y[isim] = max(abs(Y_transf-Y_or))
@@ -147,5 +153,5 @@ result = list('param' = list('D'=D, 'Q'=Q, 'K_H0'=K_H0, 'K_sim'=K_sim,
                              'distribution'=distribution, 'num_boot'=num_boot), 
               'results' = results_list, 'results_name' = results_list_name)
 save(result, file=file.path(folder_res, 
-                    paste0('res_K_', K_sim, '_distr_', distribution, '_2.Rdata')))
+                    paste0('res_K_', K_sim, '_distr_', distribution, '_newilr.Rdata')))
 
