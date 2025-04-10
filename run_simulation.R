@@ -153,5 +153,5 @@ result = list('param' = list('D'=D, 'Q'=Q, 'K_H0'=K_H0, 'K_sim'=K_sim,
                              'distribution'=distribution, 'num_boot'=num_boot), 
               'results' = results_list, 'results_name' = results_list_name)
 save(result, file=file.path(folder_res, 
-                    paste0('res_K_', K_sim, '_distr_', distribution, '_newilr.Rdata')))
+                    paste0('res_K_', K_sim, '_distr_', distribution, '_newilr_corrpSchott.Rdata')))
 

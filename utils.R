@@ -192,16 +192,13 @@ compute_pvalue_schott_theo <- function(K, stat_value, omega_y, omega_z,
   const_chi = 0.5*paramsT$sigma2_T / paramsT$mu_T
   df_chi = max(round(2*paramsT$mu_T^2/paramsT$sigma2_T), 1)
 
-  pvalues = pchisq(stat_value/const_chi, df_chi, lower.tail = FALSE)
-  
+  if (const_chi > 0){lower_tail=FALSE}else{lower_tail=TRUE}
+  pvalues = pchisq(stat_value/const_chi, df_chi, lower.tail=lower_tail)
+
   # Output
   return(list("pvalue"=pvalues, 
               "mu_T"=paramsT$mu_T, "sigma2_T"=paramsT$sigma2_T))
-  
 }
-
-
-
 
 compute_pvalue_schott <- function(K, stat_value, cov_z, cov_y, 
                                 eigen_cov_y, eigen_cov_z, eigen_sum, n_y, n_z){
@@ -233,7 +230,8 @@ compute_pvalue_schott <- function(K, stat_value, cov_z, cov_y,
   est_const_chi = 0.5*est_paramsT$sigma2_T / est_paramsT$mu_T
   est_df_chi = max(round(2*est_paramsT$mu_T^2/est_paramsT$sigma2_T), 1)
   
-  est_pvalues = pchisq(stat_value/est_const_chi, est_df_chi, lower.tail = FALSE)
+  if (est_const_chi > 0){lower_tail=FALSE}else{lower_tail=TRUE}
+  est_pvalues = pchisq(stat_value/est_const_chi, est_df_chi, lower.tail=lower_tail)
   
   # Output
   return(list("pvalue"=est_pvalues, 
