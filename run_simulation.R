@@ -10,8 +10,12 @@ library(utils)
 # Step 1. Parameters definition
 
 #   1.1 Parameters to be explored
-K_sim = 1 # Value of K used to simulate the data (H0: K=2)
+K_sim = 0 # Value of K used to simulate the data (H0: K=2)
 distribution = 'Uniform'
+#eigenval_y=c(10, 5, 3, 1, 0.5)           # Previous values
+#eigenval_z=c(8, 7, 3, 2, 0.3, 0.1, 0.02)
+eigenval_y=c(10, 9, 1, 1, 0.5)
+eigenval_z=c(6, 5, 1, 0.9, 0.3, 0.1, 0.02)
 
 #   1.2. Pre-determined parameters
 D = 8
@@ -59,8 +63,7 @@ for (isim in 1:num_sim){
   if (isim %% 10 == 1){print(paste0('Simulation num = ', isim))}
   
 # Step 4. Randomly generate covariance matrix
-  temp_covs = rand_covmat(D, K_sim, Q, eigenval_y=c(10, 5, 3, 1, 0.5), 
-                          eigenval_z=c(8, 7, 3, 2, 0.3, 0.1, 0.02))
+  temp_covs = rand_covmat(D, K_sim, Q, eigenval_y, eigenval_z)
   omega_y = temp_covs$omega_y; omega_z = temp_covs$omega_z; rm(temp_covs)
 
   for (iy in 1:length(ny_all)){
@@ -150,8 +153,9 @@ for (isim in 1:num_sim){
 # Step ??. Save result
 result = list('param' = list('D'=D, 'Q'=Q, 'K_H0'=K_H0, 'K_sim'=K_sim,
                              "ny_all" = ny_all, "nz_all" = nz_all,
-                             'distribution'=distribution, 'num_boot'=num_boot), 
+                             'distribution'=distribution, 'num_boot'=num_boot, 
+                             'eigenval_y'=eigenval_y, 'eigenval_z'=eigenval_z), 
               'results' = results_list, 'results_name' = results_list_name)
 save(result, file=file.path(folder_res, 
-                    paste0('res_K_', K_sim, '_distr_', distribution, '_newilr_corrpSchott.Rdata')))
+                    paste0('res_K_', K_sim, '_distr_', distribution, '_newilr_corrpSchott_neweigenvalue.Rdata')))
 
