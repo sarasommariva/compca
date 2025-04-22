@@ -1,6 +1,7 @@
 # TODO:
 # 1. Pulisci e commenta
 # 2. Studia cosa fa la funzione randortho
+# 3. Usare mvtnorm per estrarre da Gaussiane ed eliminare rockchalk?
 
 
 #install.packages("pracma")
@@ -8,6 +9,8 @@
 
 library(pracma)
 library(magic)
+library(mvtnorm)
+library(rockchalk)
 
 def_base_ilr <- function(D){
 
@@ -76,7 +79,7 @@ rand_indep_covmat <- function(D, K, Q, eigenval_y, eigenval_z) {
   return(list("omega_y"=omega_y, "omega_z"=omega_z))
 }
 
-rand_sample <- function(n_y, n_z, omega_y, omega_z, distribution){
+rand_sample <- function(n_y, n_z, omega_y, omega_z, distribution, df=NULL){
   
   if (distribution=='Gaussian'){
     # Case 1. Gaussian variables (with zero mean)
@@ -90,6 +93,21 @@ rand_sample <- function(n_y, n_z, omega_y, omega_z, distribution){
     L_z = chol(omega_z)
     Y_or = t(replicate(n_y, runif(size(omega_y)[1], -sqrt(3), sqrt(3)))) %*% L_y
     Z_or = t(replicate(n_z, runif(size(omega_z)[1], -sqrt(3), sqrt(3)))) %*% L_z
+  }else if (distribution=='Mult'){
+    # Case 3. Multivariate Student t.
+    scale = (df-2)/df;
+    mu_y = rep(0, size(omega_y)[1])
+    mu_z = rep(0, size(omega_z)[1])
+    Y_or = rmvt(n=n_y, delta=mu_y, sigma=scale*omega_y, df = df)
+    Z_or = rmvt(n=n_z, delta=mu_z, sigma=scale*omega_z, df = df)
+  }else if (distribution=='Gaussian2'){
+    # Case 4. Gaussian distribution using Cholesky decomposition
+    L_y = chol(omega_y) # I use the upper triangular matrix 
+    L_z = chol(omega_z)
+    mu_y = rep(0, size(omega_y)[1])
+    mu_z = rep(0, size(omega_z)[1])
+    Y_or = mvrnorm(n=n_y, mu=mu_y, Sigma=eye(size(omega_y)[1])) %*% L_y
+    Z_or = mvrnorm(n=n_z, mu=mu_z, Sigma=eye(size(omega_z)[1])) %*% L_z
   }else(print(paste('Cannot sample from', distribution)))
   
   # Output

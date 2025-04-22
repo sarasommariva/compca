@@ -11,11 +11,14 @@ library(utils)
 
 #   1.1 Parameters to be explored
 K_sim = 0 # Value of K used to simulate the data (H0: K=2)
-distribution = 'Uniform'
+distribution = 'Mult'
 #eigenval_y=c(10, 5, 3, 1, 0.5)           # Previous values
 #eigenval_z=c(8, 7, 3, 2, 0.3, 0.1, 0.02)
 eigenval_y=c(10, 9, 1, 1, 0.5)
 eigenval_z=c(6, 5, 1, 0.9, 0.3, 0.1, 0.02)
+#eigenval_y=c(3, 2, 2.5, 2.2, 0.5)
+#eigenval_z=c(6, 5, 4.8, 4.5, 3, 0.1, 0.02)
+
 
 #   1.2. Pre-determined parameters
 D = 8
@@ -157,5 +160,5 @@ result = list('param' = list('D'=D, 'Q'=Q, 'K_H0'=K_H0, 'K_sim'=K_sim,
                              'eigenval_y'=eigenval_y, 'eigenval_z'=eigenval_z), 
               'results' = results_list, 'results_name' = results_list_name)
 save(result, file=file.path(folder_res, 
-                    paste0('res_K_', K_sim, '_distr_', distribution, '_newilr_corrpSchott_neweigenvalue.Rdata')))
+                    paste0('res_K_', K_sim, '_distr_', distribution, '_newilr_corrpSchott_neweigenvalue_df100.Rdata')))
 
