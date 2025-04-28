@@ -186,6 +186,7 @@ compute_pvalue_schott_theo <- function(K, stat_value, omega_y, omega_z,
                                        n_y, n_z){
   
   Q = size(omega_z)[1] - size(omega_y)[1]
+  D = size(omega_z)[1] + 1
   
   # Step 1. Diagonalize covariance matrices
   eigen_omega_y = eigen(omega_y)
@@ -202,6 +203,10 @@ compute_pvalue_schott_theo <- function(K, stat_value, omega_y, omega_z,
   mat_K = eigen_pooled$vectors
   mat_U = t(mat_K) %*% adiag(eigen_omega_y$vectors, diag(Q))
   mat_V = t(mat_K) %*% eigen_omega_z$vectors
+  # Transform into a block diagonal matrix (this property is already 
+  # satisfied only under H_0)
+  mat_U = adiag(mat_U[1:K, 1:K], mat_U[(K+1):(D-1), (K+1):(D-1)])
+  mat_V = adiag(mat_V[1:K, 1:K], mat_V[(K+1):(D-1), (K+1):(D-1)])
   
   # Step 4. Estimate parameters of the null distribution
   paramsT = compute_param_nulldistr(K, alpha, beta, psi, mat_U, mat_V, n_y, n_z)
