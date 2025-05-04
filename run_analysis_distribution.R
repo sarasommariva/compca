@@ -23,22 +23,26 @@ df_stat_values = data.frame(
             result$stat_values_mult40), 
   distr = factor(rep(c("Gaussian",
                        "Uniform",
-                       "Multivariat t (df=4)", 
-                       "Multivariat t (df=8)", 
-                       "Multivariat t (df=40)"), each = num_sim)))
+                       "Student t (4 df)", 
+                       "Student t (8 df)", 
+                       "Student t (40 df)"), each = num_sim)))
+
+desired_order <- c("Gaussian", "Student t (4 df)", "Student t (8 df)", 
+                   "Student t (40 df)", "Uniform", "Schott")
+
 linestyles = c("Gaussian" = "longdash", 
                "Uniform" = "dotdash",
-               "Multivariat t (df=4)" = "dashed", 
-               "Multivariat t (df=8)" = "twodash",
-               "Multivariat t (df=40)" = "dotted", 
+               "Student t (4 df)" = "dashed", 
+               "Student t (8 df)" = "twodash",
+               "Student t (40 df)" = "dotted", 
                "Schott" = "solid")
 temp_n = length(linestyles)
 temp = brewer.pal(n = temp_n-1, name = "Set1")
 linecolors = c("Gaussian" = temp[5], 
                "Uniform" = temp[2],
-               "Multivariat t (df=4)" = temp[3], 
-               "Multivariat t (df=8)" = temp[4],
-               "Multivariat t (df=40)" = temp[1], 
+               "Student t (4 df)" = temp[3], 
+               "Student t (8 df)" = temp[4],
+               "Student t (40 df)" = temp[1], 
                "Schott" = "black")
 
 const_chi = 0.5*result$schott.sigma2_T / result$schott.mu_T
@@ -49,9 +53,11 @@ p_cdf <- ggplot(df_stat_values, aes(x = value, color = distr, linetype = distr))
   stat_function(fun = ~ pchisq(.x/const_chi, df_chi), size=0.5,
     aes(color = "Schott", linetype="Schott")) +
   stat_ecdf(geom = "step", size=0.7) +
-  scale_linetype_manual(values = linestyles) +
-  scale_color_manual(values = linecolors) +
+  scale_linetype_manual(values = linestyles, breaks=desired_order) +
+  scale_color_manual(values = linecolors, breaks=desired_order) +
   theme_minimal() + xlim(0, 60)
+
+print(p_cdf)
 
 ggsave('./figure/comparison_cdf.pdf', plot = p_cdf, 
        width = 14, height = 7, units = "cm")
