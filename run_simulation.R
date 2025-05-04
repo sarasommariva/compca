@@ -11,7 +11,8 @@ library(utils)
 
 #   1.1 Parameters to be explored
 K_sim = 0 # Value of K used to simulate the data (H0: K=2)
-distribution = 'Mult'
+distribution = 'Uniform'
+df = NULL
 #eigenval_y=c(10, 5, 3, 1, 0.5)           # Previous values
 #eigenval_z=c(8, 7, 3, 2, 0.3, 0.1, 0.02)
 eigenval_y=c(10, 9, 1, 1, 0.5)
@@ -27,7 +28,7 @@ K_H0 = 2  # Value of K used with the null hypothesis
 ny_all= c(20, 60, 100)
 nz_all = c(20, 60, 100)
 num_sim = 1000
-num_boot = 100
+num_boot = 1000
 
 # - Simplex basis for the ilr
 V_ilr_y = def_base_ilr(D-Q)
@@ -76,7 +77,7 @@ for (isim in 1:num_sim){
         
 # Step 5. Randomly generate data
       # 5.a. Generate in R^(D-1)
-      temp_dataset = rand_sample(n_y, n_z, omega_y, omega_z, distribution)
+      temp_dataset = rand_sample(n_y, n_z, omega_y, omega_z, distribution, df)
       Y_or = temp_dataset$Y_or; Z_or = temp_dataset$Z_or; rm(temp_dataset)
       # 5.b. Derive the compositional dataset in S_D 
       Y_comp = matrix(data=NA, nrow=n_y, ncol=D-Q)
@@ -160,5 +161,5 @@ result = list('param' = list('D'=D, 'Q'=Q, 'K_H0'=K_H0, 'K_sim'=K_sim,
                              'eigenval_y'=eigenval_y, 'eigenval_z'=eigenval_z), 
               'results' = results_list, 'results_name' = results_list_name)
 save(result, file=file.path(folder_res, 
-                    paste0('res_K_', K_sim, '_distr_', distribution, '_newilr_corrpSchott_neweigenvalue_df100.Rdata')))
+                    paste0('res_K_', K_sim, '_distr_', distribution, '_df_', df,'_boot_', num_boot,'_new.Rdata')))
 
