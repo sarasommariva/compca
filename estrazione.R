@@ -68,32 +68,53 @@ vaginal_subsites <- intersect(
 )
 vag_se   <- se[, meta$HMP_BODY_SUBSITE %in% vaginal_subsites]
 
+mid_vagina_se <- se[, meta$HMP_BODY_SUBSITE == "Mid Vagina"]
+vag_intro_se <- se[, meta$HMP_BODY_SUBSITE == "Vaginal Introitus"]
+post_forn_se <- se[, meta$HMP_BODY_SUBSITE == "Posterior Fornix"]
+
+
 # --> Stool
 stool_se <- se[, meta$HMP_BODY_SUBSITE == "Stool"]
 
+# Coppie con cui ottengo buoni risultati:
+#pop1 <- mid_vagina_se # Casi con sottospazi comuni
+#pop2 <- post_forn_se
+
+#pop1 <- mid_vagina_se
+#pop2 <- vag_intro_se
+
+#pop1 <- post_forn_se
+#pop2 <- vag_intro_se
+
+pop1 <- post_forn_se  # --> Caso senza sottospazio comune
+pop2 <- stool_se
+
+
 # Step 3. Data preprocessing
-stool_phylum <- make_phylum_table(stool_se)
-stool_native <- native_support(stool_phylum, 
+pop1_phylum <- make_phylum_table(pop1)
+pop1_native <- native_support(pop1_phylum, 
                                prevalence = 0.05, mean_abundance = 1e-4)
-vag_phylum   <- make_phylum_table(vag_se)
-vag_native   <- native_support(vag_phylum, 
+pop2_phylum   <- make_phylum_table(pop2)
+pop2_native   <- native_support(pop2_phylum, 
                                prevalence = 0.05, mean_abundance = 1e-4)
 
 
 # Some checks
-cat("Stool samples:", nrow(stool_phylum), "phyla:", ncol(stool_phylum), "\n", 
-    "Vaginal samples:", nrow(vag_phylum), "phyla:", ncol(vag_phylum), "\n")
-cat("Stool phyla:\n")
-print(colnames(stool_phylum))
-cat("Vaginal phyla:\n")
-print(colnames(vag_phylum))
+print("---> Original: \n")
+cat("Population 1 samples:", nrow(pop1_phylum), "phyla:", ncol(pop1_phylum), "\n", 
+    "Population 2 samples:", nrow(pop2_phylum), "phyla:", ncol(pop2_phylum), "\n")
+cat("Population 1 phyla:\n")
+print(colnames(pop1_phylum))
+cat("Population 2 phyla:\n")
+print(colnames(pop2_phylum))
 
-
-
-dim(stool_native)
-dim(vag_native)
-colnames(stool_native)
-colnames(vag_native)
+print("---> After preprocessing: \n")
+cat("Population 1 samples:", nrow(pop1_native), "phyla:", ncol(pop1_native), "\n", 
+    "Population 2 samples:", nrow(pop2_native), "phyla:", ncol(pop2_native), "\n")
+cat("Population 1 phyla:\n")
+print(colnames(pop1_native))
+cat("Population 2 phyla:\n")
+print(colnames(pop2_native))
 
 #write.csv(stool_native, "HMP_V35_stool_phylum_composition.csv")
 #write.csv(vag_native, "HMP_V35_vaginal_phylum_composition.csv")
@@ -104,13 +125,14 @@ colnames(vag_native)
 # 1) Togliere la colonna 'Unclassified'
 # 2) Gestire gli zeri non strutturali?
 
-Y_or_temp = vag_native
-Z_or_temp = stool_native
+Y_or_temp = pop1_native
+Z_or_temp = pop2_native
 
 n_y = nrow(Y_or_temp)
 n_z = nrow(Z_or_temp)
 D = ncol(Z_or_temp)
 Q = D - ncol(Y_or_temp)
+K_H0_tested = seq(1, D-Q)
 
 Y_or = clo(Y_or_temp)[,1:(D-Q)]
 Z_or = clo(Z_or_temp)
@@ -127,36 +149,57 @@ for (id in 1:n_z){
   Z_transf[id,] <- ilr(Z_or[id,], V=V_ilr_z)
 }
 
-K_H0 = 6
 num_boot = 3000
 
-# Step 3. Compute sample value of the test statistic
-aux = compute_stat_value(K_H0, Y_transf, Z_transf)
-stat_value = aux$stat_value; 
-est_cov_y = aux$est_cov_y; est_cov_z = aux$est_cov_z;
-eigen_cov_y = aux$eigen_cov_y; eigen_cov_z = aux$eigen_cov_z;
-eigen_sum = aux$eigen_sum; rm(aux)
+pvalues.schott <- matrix(data=NA, nrow=length(K_H0_tested))
+pvalues.boot <- matrix(data=NA, nrow=length(K_H0_tested))
+values_stat <- matrix(data=NA, nrow=length(K_H0_tested)) 
 
-# Step 4. Estimate p-value by using Schott's formula on the sample
-#         covariance matrix
-aux = compute_pvalue_schott(K_H0, stat_value, est_cov_z, est_cov_y, 
-                            eigen_cov_y, eigen_cov_z, eigen_sum, n_y, n_z)
-pvalue_schott = aux$pvalue;
-print('Estimated mu_T')
-print(aux$est_mu_T)
-print('Estimated sigma2_T')
-print(aux$est_sigma2_T)
-rm(aux)
+idx <- 1
 
-# Step 5. Estimate p-value by using Schott's formula on the sample
-#         covariance matrix
-aux = compute_pvalue_boot(K_H0, num_boot, stat_value, 
-                          eigen_cov_y, eigen_cov_z, Y_transf, Z_transf)
-pvalue_boot = aux$pvalue; rm(aux)
+for (K_H0 in K_H0_tested){
+  
+  cat("----- Tested K = ", K_H0, " --------- \n")
+  
+  # Step 3. Compute sample value of the test statistic
+  aux = compute_stat_value(K_H0, Y_transf, Z_transf)
+  values_stat[idx] = aux$stat_value; 
+  est_cov_y = aux$est_cov_y; est_cov_z = aux$est_cov_z;
+  eigen_cov_y = aux$eigen_cov_y; eigen_cov_z = aux$eigen_cov_z;
+  eigen_sum = aux$eigen_sum; rm(aux)
+  
+  # Step 4. Estimate p-value by using Schott's formula on the sample
+  #         covariance matrix
+  aux = compute_pvalue_schott(K_H0, values_stat[idx], est_cov_z, est_cov_y, 
+                              eigen_cov_y, eigen_cov_z, eigen_sum, n_y, n_z)
+  pvalues.schott[idx] = aux$pvalue;
+  
+  #print('Estimated mu_T')
+  #print(aux$est_mu_T)
+  #print('Estimated sigma2_T')
+  #print(aux$est_sigma2_T)
+  
+  rm(aux)
+  
+  # Step 5. Estimate p-value by using Bootstrapping
+  aux = compute_pvalue_boot(K_H0, num_boot, values_stat[idx], 
+                            eigen_cov_y, eigen_cov_z, Y_transf, Z_transf)
+  pvalues.boot[idx] = aux$pvalue; rm(aux)
+  
+  print('Test statistics')
+  print(values_stat[idx] )
+  print('Schott:')
+  print(pvalues.schott[idx])
+  print('Boot:')
+  print(pvalues.boot[idx])
+  
+  idx = idx + 1
+}
 
-print('Test statistics')
-print(stat_value)
-print('Schott:')
-print(pvalue_schott)
-print('Boot:')
-print(pvalue_boot)
+
+
+
+
+
+
+
