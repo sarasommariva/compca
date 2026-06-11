@@ -51,7 +51,11 @@ rand_covmat <- function(M, Q1, Q2, K, eigenval_y, eigenval_z) {
   
   # Step 1. Covariance matrix of Y
   mat_U_1 = randortho(M-1, type="orthonormal")
-  mat_U_2 = randortho(Q2, type="orthonormal")
+  if (Q2 > 0){
+    mat_U_2 = randortho(Q2, type="orthonormal")}
+  else{
+    mat_U_2 = diag(0)  
+    }
   mat_U = adiag(mat_U_1, mat_U_2)
   omega_y = mat_U %*% diag(eigenval_y) %*% t(mat_U)
   
@@ -501,7 +505,7 @@ compute_pvalue_boot_single <- function(K, num_rip, stat_value,
     Y_boot = Y_transf[randi(n_y, n_y, 1), ]
     Z_boot = Zb_transf[randi(n_z, n_z, 1), ]
     # Step 5. Compute value of the test statistic for the bootstrap sample
-    aux_boot = compute_stat_value(K_H0, Y_boot, Z_boot)
+    aux_boot = compute_stat_value_single(K_H0, Y_boot, Z_boot)
     boot_stat_values[iboot] = aux_boot$stat_value
   }
   # Step 6. Estimate the bootstrap p-value
