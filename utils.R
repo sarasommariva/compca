@@ -12,6 +12,18 @@ library(magic)
 library(mvtnorm)
 library(rockchalk)
 
+my_ilr <- function(comp){
+  
+  D = size(comp)[2]
+  comp_transf = matrix(data=NA, nrow=1, ncol=D-1)
+  for (i in 1:D-1){
+    comp_transf[i] <- sqrt((i/(i+1))) * log( comp[i+1] / exp(mean(log(comp[1:i]))) )
+  }
+  
+  return(comp_transf)
+  
+}
+
 def_base_ilr <- function(D, transf='backpivot'){
 
   V_ilr<-matrix(ncol=D-1,nrow=D,0)
@@ -21,7 +33,7 @@ def_base_ilr <- function(D, transf='backpivot'){
     for(j in 1:(D-1)){
       V_ilr[j,j]<-(D-j)/(sqrt((D-j+1)*(D-j)))
       for(i in (j+1):D)
-        V_ilr[i,j]<--1/(sqrt((D-j+1)*(D-j)))
+        V_ilr[i,j]<- -1/(sqrt((D-j+1)*(D-j)))
     }
 
     }else if(transf=='backpivot'){
@@ -29,8 +41,8 @@ def_base_ilr <- function(D, transf='backpivot'){
       for(i in 1:(D-1)){
         aux <- sqrt(i/(i+1))
         for(j in 1:i){
-          V_ilr[j,i] <- 1/i*aux}
-        V_ilr[i+1, i] <- -aux}
+          V_ilr[j,i] <- -1/i*aux}
+        V_ilr[i+1, i] <- aux}
 
     }
   return(V_ilr)
